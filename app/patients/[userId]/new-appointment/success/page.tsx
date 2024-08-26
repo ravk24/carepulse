@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
 import { getAppointment } from "@/lib/actions/appointment.actions";
 import { formatDateTime } from "@/lib/utils";
+import { getUser } from "@/lib/actions/patient.actions";
 
 const RequestSuccess = async ({
   searchParams,
@@ -12,7 +13,9 @@ const RequestSuccess = async ({
 }: SearchParamProps) => {
   const appointmentId = (searchParams?.appointmentId as string) || "";
   const appointment = await getAppointment(appointmentId);
-
+  const user = await getUser(userId);
+  Sentry.metrics.set("user_view_appointment-success", user.name);
+  //go-to sentry and check the metrics in side tab->check for custom enteries in user_view tab->add all the metric to track
   const doctor = Doctors.find(
     (doctor) => doctor.name === appointment.primaryPhysician
   );
@@ -36,6 +39,7 @@ const RequestSuccess = async ({
             height={300}
             width={280}
             alt="success"
+            unoptimized
           />
           <h2 className="header mb-6 max-w-[600px] text-center">
             Your <span className="text-green-500">appointment request</span> has
