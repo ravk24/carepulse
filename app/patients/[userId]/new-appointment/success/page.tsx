@@ -32,7 +32,6 @@ const RequestSuccess = async ({
             className="h-10 w-fit"
           />
         </Link>
-
         <section className="flex flex-col items-center">
           <Image
             src="/assets/gifs/success.gif"
@@ -47,7 +46,6 @@ const RequestSuccess = async ({
           </h2>
           <p>We&apos;ll be in touch shortly to confirm.</p>
         </section>
-
         <section className="request-details">
           <p>Requested appointment details: </p>
           <div className="flex items-center gap-3">
@@ -70,13 +68,12 @@ const RequestSuccess = async ({
             <p> {formatDateTime(appointment.schedule).dateTime}</p>
           </div>
         </section>
-
+        {/* With asChild: The Link behaves as a button, inheriting the Button component's styles and behavior. Without asChild: The Link and Button behave independently, which could cause styling or functionality issues. */}
         <Button variant="outline" className="shad-primary-btn" asChild>
           <Link href={`/patients/${userId}/new-appointment`}>
             New Appointment
           </Link>
         </Button>
-
         <p className="copyright">© 2024 CarePluse</p>
       </div>
     </div>

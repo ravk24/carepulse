@@ -50,6 +50,7 @@ const RegisterForm = ({ user }: { user: User }) => {
       values.identificationDocument?.length > 0
     ) {
       const blobFile = new Blob([values.identificationDocument[0]], {
+        //blob is a special version of file, that the browser can read.
         type: values.identificationDocument[0].type,
       });
 
@@ -107,7 +108,6 @@ const RegisterForm = ({ user }: { user: User }) => {
           <h1 className="header">Welcome 👋</h1>
           <p className="text-dark-700">Let us know more about yourself.</p>
         </section>
-
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
             <h2 className="sub-header">Personal Information</h2>
@@ -218,7 +218,6 @@ const RegisterForm = ({ user }: { user: User }) => {
             />
           </div>
         </section>
-
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
             <h2 className="sub-header">Medical Information</h2>
@@ -228,7 +227,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.SELECT}
             control={form.control}
-            name="primaryPhysician"
+            name="primaryPhysician" //it should match the attribute name in the appwrite database
             label="Primary care physician"
             placeholder="Select a physician"
           >
@@ -306,6 +305,8 @@ const RegisterForm = ({ user }: { user: User }) => {
           </div>
         </section>
 
+        {/* Identification and Verfication */}
+
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
             <h2 className="sub-header">Identification and Verfication</h2>
@@ -340,12 +341,12 @@ const RegisterForm = ({ user }: { user: User }) => {
             label="Scanned Copy of Identification Document"
             renderSkeleton={(field) => (
               <FormControl>
+                {/* using npm react-dropzone package to implement this */}
                 <FileUploader files={field.value} onChange={field.onChange} />
               </FormControl>
             )}
           />
         </section>
-
         <section className="space-y-6">
           <div className="mb-9 space-y-1">
             <h2 className="sub-header">Consent and Privacy</h2>
@@ -374,7 +375,6 @@ const RegisterForm = ({ user }: { user: User }) => {
             privacy policy"
           />
         </section>
-
         <SubmitButton isLoading={isLoading}>Submit and Continue</SubmitButton>
       </form>
     </Form>

@@ -3,7 +3,7 @@ import "./globals.css";
 import { Plus_Jakarta_Sans as FontSans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; //cn -> this is installed for us as soon we install tailwind css, allowing to enable adding dynamic classes to compnents
 
 const fontSans = FontSans({
   subsets: ["latin"],

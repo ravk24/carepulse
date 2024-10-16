@@ -23,6 +23,8 @@ import { decryptKey, encryptKey } from "@/lib/utils";
 export const PasskeyModal = () => {
   const router = useRouter();
   const path = usePathname();
+  //   usePathname() is a hook that retrieves the current URL path in your application. It returns the pathname part of the URL (the part after the domain).
+  // For example, if the current URL is https://example.com/dashboard/settings, usePathname() would return "/dashboard/settings".
   const [open, setOpen] = useState(false);
   const [passkey, setPasskey] = useState("");
   const [error, setError] = useState("");
@@ -33,8 +35,8 @@ export const PasskeyModal = () => {
       : null;
 
   useEffect(() => {
-    const accessKey = encryptedKey && decryptKey(encryptedKey);
-
+    const accessKey = encryptedKey && decryptKey(encryptedKey); //refer the below notes to understand, if required.
+    // it means we are on the client side and a path exists
     if (path)
       if (accessKey === process.env.NEXT_PUBLIC_ADMIN_PASSKEY!.toString()) {
         setOpen(false);
@@ -118,3 +120,14 @@ export const PasskeyModal = () => {
     </AlertDialog>
   );
 };
+
+// is a JavaScript shorthand for conditionally assigning a value to accessKey. Here's how it works:
+
+// encryptedKey &&: This is a logical "AND" operation. It first checks if encryptedKey is truthy (i.e., not null, undefined, false, 0, '', etc.). If encryptedKey is falsy, the expression short-circuits, and the value of accessKey becomes encryptedKey (i.e., falsy).
+
+// decryptKey(encryptedKey): If encryptedKey is truthy, the code proceeds to execute the decryptKey function, passing encryptedKey as an argument. This function likely decrypts the key.
+
+// So, this line means:
+
+// If encryptedKey is valid (truthy), it calls the decryptKey function with encryptedKey and assigns the decrypted result to accessKey.
+// If encryptedKey is falsy, accessKey will also be falsy (e.g., null or undefined).

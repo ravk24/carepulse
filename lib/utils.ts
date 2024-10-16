@@ -6,11 +6,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value));
+//JSON.stringyfy converts the value to JSON string and JSOn.parse parses the JSOn string to a value.
+/*The purpose of this parseStringify function is to create a deep clone (or deep copy) of the value.
+Deep cloning means that nested objects/arrays inside the original value are also copied, not just the top-level properties.*/
 
-export const convertFileToUrl = (file: File) => URL.createObjectURL(file);
+export const convertFileToUrl = (file: File) => URL.createObjectURL(file); //Enables File Access in the Browser
 
 // FORMAT DATE TIME
-export const formatDateTime = (dateString: Date | string, timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone) => {
+export const formatDateTime = (
+  dateString: Date | string,
+  timeZone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+) => {
   const dateTimeOptions: Intl.DateTimeFormatOptions = {
     // weekday: "short", // abbreviated weekday name (e.g., 'Mon')
     month: "short", // abbreviated month name (e.g., 'Oct')

@@ -17,6 +17,7 @@ import { Input } from "./ui/input";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
 
+// Enums in TypeScript are used to define a set of NAMED CONSTANTS. They allow you to associate friendly names with a set of constant values, which makes the code more readable and easier to maintain.
 export enum FormFieldType {
   INPUT = "input",
   TEXTAREA = "textarea",
@@ -78,6 +79,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
       );
     case FormFieldType.PHONE_INPUT:
       return (
+        //for phone_input we use a library from npm by searching react-phone-number-input. Remember: Do not re-invent the wheel.
         <FormControl>
           <PhoneInput
             defaultCountry="US"

@@ -5,6 +5,7 @@ import RegisterForm from "@/components/forms/RegisterForm";
 import { getPatient, getUser } from "@/lib/actions/patient.actions";
 
 const Register = async ({ params: { userId } }: SearchParamProps) => {
+  // Inside the params object, we’re specifically extracting the userId property: params: { userId }. This means the function is interested only in the userId field from the params object.
   const user = await getUser(userId);
 
   Sentry.metrics.set("user_view_register", user.name);
