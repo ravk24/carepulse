@@ -37,3 +37,7 @@ next-env.d.ts
 
 oldFiles
 secondFolder
+
+# local planning notes
+project_update.md
+testing_details.md
