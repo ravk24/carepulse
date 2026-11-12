@@ -1,69 +1,56 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { decryptKey, encryptKey } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signInAdmin } from "@/lib/actions/auth.actions";
 
-export const PasskeyModal = () => {
+// Admin sign-in: credentials are checked on the server by Supabase Auth,
+// which sets an httpOnly session cookie. Nothing secret lives in the browser bundle.
+export const AdminLoginModal = () => {
   const router = useRouter();
-  const path = usePathname();
-  //   usePathname() is a hook that retrieves the current URL path in your application. It returns the pathname part of the URL (the part after the domain).
-  // For example, if the current URL is https://example.com/dashboard/settings, usePathname() would return "/dashboard/settings".
-  const [open, setOpen] = useState(false);
-  const [passkey, setPasskey] = useState("");
+  const [open, setOpen] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  const encryptedKey =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("accessKey")
-      : null;
-
-  useEffect(() => {
-    const accessKey = encryptedKey && decryptKey(encryptedKey); //refer the below notes to understand, if required.
-    // it means we are on the client side and a path exists
-    if (path)
-      if (accessKey === process.env.NEXT_PUBLIC_ADMIN_PASSKEY!.toString()) {
-        setOpen(false);
-        router.push("/admin");
-      } else {
-        setOpen(true);
-      }
-  }, [encryptedKey]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const closeModal = () => {
     setOpen(false);
     router.push("/");
   };
 
-  const validatePasskey = (
-    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-  ) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    if (passkey === process.env.NEXT_PUBLIC_ADMIN_PASSKEY) {
-      const encryptedKey = encryptKey(passkey);
+    try {
+      const result = await signInAdmin({ email, password });
 
-      localStorage.setItem("accessKey", encryptedKey);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
 
       setOpen(false);
-    } else {
-      setError("Invalid passkey. Please try again.");
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -72,7 +59,7 @@ export const PasskeyModal = () => {
       <AlertDialogContent className="shad-alert-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-start justify-between">
-            Admin Access Verification
+            Admin Sign In
             <Image
               src="/assets/icons/close.svg"
               alt="close"
@@ -83,51 +70,56 @@ export const PasskeyModal = () => {
             />
           </AlertDialogTitle>
           <AlertDialogDescription>
-            To access the admin page, please enter the passkey.
+            Sign in with your admin account to access the dashboard.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div>
-          <InputOTP
-            maxLength={6}
-            value={passkey}
-            onChange={(value) => setPasskey(value)}
-          >
-            <InputOTPGroup className="shad-otp">
-              <InputOTPSlot className="shad-otp-slot" index={0} />
-              <InputOTPSlot className="shad-otp-slot" index={1} />
-              <InputOTPSlot className="shad-otp-slot" index={2} />
-              <InputOTPSlot className="shad-otp-slot" index={3} />
-              <InputOTPSlot className="shad-otp-slot" index={4} />
-              <InputOTPSlot className="shad-otp-slot" index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="admin-email" className="shad-input-label">
+              Email
+            </Label>
+            <Input
+              id="admin-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="shad-input rounded-md border border-dark-500 bg-dark-400 px-3"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="admin-password" className="shad-input-label">
+              Password
+            </Label>
+            <Input
+              id="admin-password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="shad-input rounded-md border border-dark-500 bg-dark-400 px-3"
+            />
+          </div>
 
           {error && (
-            <p className="shad-error text-14-regular mt-4 flex justify-center">
+            <p className="shad-error text-14-regular flex justify-center">
               {error}
             </p>
           )}
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogAction
-            onClick={(e) => validatePasskey(e)}
+
+          <Button
+            type="submit"
+            disabled={isLoading}
             className="shad-primary-btn w-full"
           >
-            Enter Admin Passkey
-          </AlertDialogAction>
-        </AlertDialogFooter>
+            {isLoading ? "Signing in..." : "Sign In"}
+          </Button>
+        </form>
       </AlertDialogContent>
     </AlertDialog>
   );
 };
-
-// is a JavaScript shorthand for conditionally assigning a value to accessKey. Here's how it works:
-
-// encryptedKey &&: This is a logical "AND" operation. It first checks if encryptedKey is truthy (i.e., not null, undefined, false, 0, '', etc.). If encryptedKey is falsy, the expression short-circuits, and the value of accessKey becomes encryptedKey (i.e., falsy).
-
-// decryptKey(encryptedKey): If encryptedKey is truthy, the code proceeds to execute the decryptKey function, passing encryptedKey as an argument. This function likely decrypts the key.
-
-// So, this line means:
-
-// If encryptedKey is valid (truthy), it calls the decryptKey function with encryptedKey and assigns the decrypted result to accessKey.
-// If encryptedKey is falsy, accessKey will also be falsy (e.g., null or undefined).

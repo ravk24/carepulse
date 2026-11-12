@@ -5,8 +5,11 @@ import { StatCard } from "@/components/StatCard";
 import { columns } from "@/components/table/columns";
 import { DataTable } from "@/components/table/DataTable";
 import { getRecentAppointmentList } from "@/lib/actions/appointment.actions";
+import { signOutAdmin } from "@/lib/actions/auth.actions";
+import { requireAdminPage } from "@/lib/auth";
 
 const AdminPage = async () => {
+  const admin = await requireAdminPage();
   const appointments = await getRecentAppointmentList();
 
   return (
@@ -22,7 +25,17 @@ const AdminPage = async () => {
           />
         </Link>
 
-        <p className="text-16-semibold">Admin Dashboard</p>
+        <div className="flex items-center gap-6">
+          <p className="text-16-semibold">Admin Dashboard</p>
+          <span className="text-14-regular hidden text-dark-600 sm:inline">
+            {admin.email}
+          </span>
+          <form action={signOutAdmin}>
+            <button type="submit" className="text-14-medium text-green-500">
+              Sign out
+            </button>
+          </form>
+        </div>
       </header>
 
       <main className="admin-main">
@@ -36,26 +49,27 @@ const AdminPage = async () => {
         <section className="admin-stat">
           <StatCard
             type="appointments"
-            count={appointments.scheduledCount}
+            count={appointments?.scheduledCount ?? 0}
             label="Scheduled appointments"
             icon={"/assets/icons/appointments.svg"}
           />
           <StatCard
             type="pending"
-            count={appointments.pendingCount}
+            count={appointments?.pendingCount ?? 0}
             label="Pending appointments"
             icon={"/assets/icons/pending.svg"}
           />
           <StatCard
             type="cancelled"
-            count={appointments.cancelledCount}
+            count={appointments?.cancelledCount ?? 0}
             label="Cancelled appointments"
             icon={"/assets/icons/cancelled.svg"}
           />
         </section>
 
-        <DataTable columns={columns} data={appointments.documents} />
+        <DataTable columns={columns} data={appointments?.documents ?? []} />
       </main>
+      
     </div>
   );
 };

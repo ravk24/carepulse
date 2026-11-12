@@ -227,7 +227,7 @@ const RegisterForm = ({ user }: { user: User }) => {
           <CustomFormField
             fieldType={FormFieldType.SELECT}
             control={form.control}
-            name="primaryPhysician" //it should match the attribute name in the appwrite database
+            name="primaryPhysician" //it should match the column name in the supabase patients table
             label="Primary care physician"
             placeholder="Select a physician"
           >
