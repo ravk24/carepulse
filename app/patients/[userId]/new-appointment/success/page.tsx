@@ -71,7 +71,7 @@ const RequestSuccess = async ({
             New Appointment
           </Link>
         </Button>
-        <p className="copyright">© 2024 CarePluse</p>
+        <p className="copyright">© 2025 CarePulse</p>
       </div>
     </div>
   );

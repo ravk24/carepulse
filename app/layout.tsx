@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans as FontSans } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 
 import { cn } from "@/lib/utils"; //cn -> this is installed for us as soon we install tailwind css, allowing to enable adding dynamic classes to compnents
 
@@ -24,16 +23,17 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    // The app is dark-only, so dark mode is set in the server HTML itself rather than by a
+    // client-side theme script (which could be overridden by a stale localStorage value
+    // or lost after a hydration mismatch, leaving black text on the dark background).
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <body
         className={cn(
-          "min-h-screen bg-dark-300 font-sans antialiased",
+          "min-h-screen bg-dark-300 font-sans text-white antialiased",
           fontSans.variable
         )}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
-        </ThemeProvider>
+        {children}
       </body>
     </html>
   );
