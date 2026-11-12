@@ -14,6 +14,13 @@ const APPOINTMENT_SELECT = "*, patient:patients!patientId(*)";
 const toAppointment = (row: any) =>
   row && { ...toDocument(row), patient: toDocument(row.patient) };
 
+// Message shown in the form when an action fails. Full details always go to the server log;
+// in development they're also returned so problems are visible without reading the terminal.
+const toErrorMessage = (error: any, fallback: string) =>
+  process.env.NODE_ENV === "production"
+    ? fallback
+    : `${fallback} (${[error?.code, error?.message, error?.details, error?.hint].filter(Boolean).join(" | ") || String(error)})`;
+
 //  CREATE APPOINTMENT
 export const createAppointment = async ({
   patient,
@@ -29,9 +36,10 @@ export const createAppointment = async ({
     if (error) throw error;
 
     revalidatePath("/admin"); //kind of refresh the path
-    return parseStringify(toAppointment(newAppointment));
+    return { appointment: parseStringify(toAppointment(newAppointment)) as Appointment };
   } catch (error) {
     console.error("An error occurred while creating a new appointment:", error);
+    return { error: toErrorMessage(error, "Couldn't create the appointment. Please try again.") };
   }
 };
 
@@ -152,9 +160,10 @@ export const updateAppointment = async ({
     await sendSMSNotification(userId, smsMessage);
 
     revalidatePath("/admin");
-    return parseStringify(toAppointment(updatedAppointment));
+    return { appointment: parseStringify(toAppointment(updatedAppointment)) as Appointment };
   } catch (error) {
     console.error("An error occurred while scheduling an appointment:", error);
+    return { error: toErrorMessage(error, "Couldn't update the appointment. Please try again.") };
   }
 };
 

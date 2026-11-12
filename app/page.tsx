@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AdminLoginGate } from "@/components/AdminLoginGate";
 import { PatientForm } from "@/components/forms/PatientForm";
+import { Logo } from "@/components/Logo";
 
 // Fully static page (no searchParams / cookies read on the server), so it's prerendered
 // at build time and served straight from the CDN.
@@ -16,16 +17,7 @@ const Home = () => {
 
       <section className="remove-scrollbar container my-auto">
         <div className="sub-container max-w-[496px]">
-          <Link href="/" aria-label="CarePulse home">
-            <Image
-              src="/assets/icons/logo-full.svg"
-              height={32}
-              width={162}
-              alt="CarePulse"
-              priority
-              className="mb-0 h-10 w-fit"
-            />
-          </Link>
+          <Logo priority />
 
           <PatientForm />
 

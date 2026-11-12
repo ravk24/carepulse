@@ -1,5 +1,3 @@
-import Image from "next/image";
-import Link from "next/link";
 
 import { StatCard } from "@/components/StatCard";
 import { columns } from "@/components/table/columns";
@@ -7,6 +5,7 @@ import { DataTable } from "@/components/table/DataTable";
 import { getRecentAppointmentList } from "@/lib/actions/appointment.actions";
 import { signOutAdmin } from "@/lib/actions/auth.actions";
 import { requireAdminPage } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 
 const AdminPage = async () => {
   const admin = await requireAdminPage();
@@ -15,15 +14,7 @@ const AdminPage = async () => {
   return (
     <div className="mx-auto flex max-w-7xl flex-col space-y-14">
       <header className="admin-header">
-        <Link href="/" className="cursor-pointer">
-          <Image
-            src="/assets/icons/logo-full.svg"
-            height={32}
-            width={162}
-            alt="CarePulse"
-            className="h-8 w-fit"
-          />
-        </Link>
+        <Logo imageClassName="h-8" priority />
 
         <div className="flex items-center gap-6">
           <p className="text-16-semibold">Admin Dashboard</p>

@@ -33,6 +33,7 @@ export const AppointmentForm = ({
 }) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const AppointmentFormValidation = getAppointmentSchema(type);
 
@@ -53,6 +54,7 @@ export const AppointmentForm = ({
     values: z.infer<typeof AppointmentFormValidation>
   ) => {
     setIsLoading(true);
+    setSubmitError("");
 
     let status;
     switch (type) {
@@ -67,7 +69,16 @@ export const AppointmentForm = ({
     }
 
     try {
-      if (type === "create" && patientId) {
+      if (type === "create") {
+        // Never fall through to the admin-only update path from the patient's create form
+        if (!patientId) {
+          setSubmitError(
+            "We couldn't find your patient profile. Please complete registration first."
+          );
+          setIsLoading(false);
+          return;
+        }
+
         const appointment = {
           userId,
           patient: patientId,
@@ -78,13 +89,15 @@ export const AppointmentForm = ({
           note: values.note,
         };
 
-        const newAppointment = await createAppointment(appointment);
+        const result = await createAppointment(appointment);
 
-        if (newAppointment) {
+        if (result.appointment) {
           form.reset();
           router.push(
-            `/patients/${userId}/new-appointment/success?appointmentId=${newAppointment.$id}`
+            `/patients/${userId}/new-appointment/success?appointmentId=${result.appointment.$id}`
           );
+        } else {
+          setSubmitError(result.error ?? "Couldn't create the appointment.");
         }
       } else {
         const appointmentToUpdate = {
@@ -100,15 +113,18 @@ export const AppointmentForm = ({
           type,
         };
 
-        const updatedAppointment = await updateAppointment(appointmentToUpdate);
+        const result = await updateAppointment(appointmentToUpdate);
 
-        if (updatedAppointment) {
+        if (result.appointment) {
           setOpen && setOpen(false);
           form.reset();
+        } else {
+          setSubmitError(result.error ?? "Couldn't update the appointment.");
         }
       }
     } catch (error) {
       console.log(error);
+      setSubmitError("Something went wrong. Please try again.");
     }
     setIsLoading(false);
   };
@@ -203,6 +219,12 @@ export const AppointmentForm = ({
             label="Reason for cancellation"
             placeholder="Urgent meeting came up"
           />
+        )}
+
+        {submitError && (
+          <p role="alert" className="shad-error text-14-regular">
+            {submitError}
+          </p>
         )}
 
         <SubmitButton

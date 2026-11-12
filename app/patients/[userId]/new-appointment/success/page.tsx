@@ -4,15 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
 import { getAppointment } from "@/lib/actions/appointment.actions";
 import { formatDateTime } from "@/lib/utils";
-import { getUser } from "@/lib/actions/patient.actions";
+import { Logo } from "@/components/Logo";
 
 const RequestSuccess = async ({
   searchParams,
   params: { userId },
 }: SearchParamProps) => {
   const appointmentId = (searchParams?.appointmentId as string) || "";
-  const appointment = await getAppointment(appointmentId);
-  const user = await getUser(userId);
+  const appointment = appointmentId
+    ? await getAppointment(appointmentId)
+    : undefined;
+
+  // Missing/invalid id, or the appointment was deleted: show a clear message instead of crashing
+  if (!appointment) {
+    return (
+      <div className="flex h-screen max-h-screen px-[5%]">
+        <div className="success-img">
+          <Logo />
+          <section className="flex flex-col items-center gap-4 text-center">
+            <h2 className="header max-w-[600px]">Appointment not found</h2>
+            <p className="text-dark-700">
+              We couldn&apos;t find this appointment. It may have been removed.
+            </p>
+          </section>
+          <Button variant="outline" className="shad-primary-btn" asChild>
+            <Link href={`/patients/${userId}/new-appointment`}>
+              Request a new appointment
+            </Link>
+          </Button>
+          <p className="copyright">© 2025 CarePulse</p>
+        </div>
+      </div>
+    );
+  }
+
   const doctor = Doctors.find(
     (doctor) => doctor.name === appointment.primaryPhysician
   );
@@ -20,15 +45,7 @@ const RequestSuccess = async ({
   return (
     <div className=" flex h-screen max-h-screen px-[5%]">
       <div className="success-img">
-        <Link href="/">
-          <Image
-            src="/assets/icons/logo-full.svg"
-            height={32}
-            width={162}
-            alt="CarePulse"
-            className="h-10 w-fit"
-          />
-        </Link>
+        <Logo />
         <section className="flex flex-col items-center">
           <Image
             src="/assets/gifs/success.gif"

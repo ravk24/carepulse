@@ -4,6 +4,8 @@ import type { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { noStoreFetch } from "./supabase.config";
+
 // Cookie-based Supabase client (anon/publishable key) used only for authentication.
 // Data access still goes through the service-role client in lib/supabase.config.ts.
 export const createAuthClient = () => {
@@ -13,6 +15,8 @@ export const createAuthClient = () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // Auth checks must never come from Next's fetch cache (see noStoreFetch)
+      global: { fetch: noStoreFetch },
       cookies: {
         getAll: () => cookieStore.getAll(),
         setAll: (cookiesToSet) => {

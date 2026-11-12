@@ -7,10 +7,18 @@ export const {
   SUPABASE_BUCKET = "identification-documents",
 } = process.env;
 
+// Next.js 14 caches every server-side fetch() GET by default, and supabase-js uses fetch.
+// Without this, a read like "find the patient for this user" is cached forever: e.g. the
+// empty result from before a patient registered keeps being returned afterwards.
+// Supabase data is live, so never let Next cache it.
+export const noStoreFetch: typeof fetch = (input, init) =>
+  fetch(input, { ...init, cache: "no-store" });
+
 // Server-side client using the service role key. It bypasses Row Level Security,
 // so it must only ever be used in server code (server actions / server components).
 export const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
   auth: { persistSession: false, autoRefreshToken: false },
+  global: { fetch: noStoreFetch },
 });
 
 export const TABLES = {
