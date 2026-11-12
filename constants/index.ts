@@ -38,7 +38,7 @@ export const IdentificationTypes = [
   "State ID Card",
   "Student ID Card",
   "Voter ID Card",
-];
+] as const;
 
 export const Doctors = [
   {
