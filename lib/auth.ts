@@ -8,8 +8,8 @@ import { noStoreFetch } from "./supabase.config";
 
 // Cookie-based Supabase client (anon/publishable key) used only for authentication.
 // Data access still goes through the service-role client in lib/supabase.config.ts.
-export const createAuthClient = () => {
-  const cookieStore = cookies();
+export const createAuthClient = async () => {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -42,7 +42,7 @@ export const isAdminUser = (user: User | null | undefined) =>
 // Verifies the session with the Supabase Auth server (getUser, not getSession,
 // which would trust the cookie without checking it).
 export const getAdminUser = async () => {
-  const supabase = createAuthClient();
+  const supabase = await createAuthClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

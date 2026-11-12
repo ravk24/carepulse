@@ -29,7 +29,7 @@ const DatePickerField = ({
       <ReactDatePicker
         showTimeSelect={showTimeSelect ?? false}
         selected={field.value}
-        onChange={(date: Date) => field.onChange(date)}
+        onChange={(date: Date | null) => field.onChange(date)}
         timeInputLabel="Time:"
         dateFormat={dateFormat ?? "MM/dd/yyyy"}
         wrapperClassName="date-picker"

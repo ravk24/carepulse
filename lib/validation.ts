@@ -20,7 +20,7 @@ export const PatientFormValidation = z.object({
   phone: z
     .string()
     .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
-  birthDate: z.coerce.date(),
+  birthDate: z.date({ error: "Select your date of birth" }),
   gender: z.enum(["male", "female", "other"]),
   address: z
     .string()
@@ -58,19 +58,16 @@ export const PatientFormValidation = z.object({
   identificationDocument: z.custom<File[]>().optional(),
   treatmentConsent: z
     .boolean()
-    .default(false)
     .refine((value) => value === true, {
       message: "You must consent to treatment in order to proceed",
     }),
   disclosureConsent: z
     .boolean()
-    .default(false)
     .refine((value) => value === true, {
       message: "You must consent to disclosure in order to proceed",
     }),
   privacyConsent: z
     .boolean()
-    .default(false)
     .refine((value) => value === true, {
       message: "You must consent to privacy in order to proceed",
     }),
@@ -78,7 +75,7 @@ export const PatientFormValidation = z.object({
 
 export const CreateAppointmentSchema = z.object({
   primaryPhysician: z.string().min(2, "Select at least one doctor"),
-  schedule: z.coerce.date(),
+  schedule: z.date({ error: "Select a date and time" }),
   reason: z
     .string()
     .min(2, "Reason must be at least 2 characters")
@@ -89,7 +86,7 @@ export const CreateAppointmentSchema = z.object({
 
 export const ScheduleAppointmentSchema = z.object({
   primaryPhysician: z.string().min(2, "Select at least one doctor"),
-  schedule: z.coerce.date(),
+  schedule: z.date({ error: "Select a date and time" }),
   reason: z.string().optional(),
   note: z.string().optional(),
   cancellationReason: z.string().optional(),
@@ -97,7 +94,7 @@ export const ScheduleAppointmentSchema = z.object({
 
 export const CancelAppointmentSchema = z.object({
   primaryPhysician: z.string().min(2, "Select at least one doctor"),
-  schedule: z.coerce.date(),
+  schedule: z.date({ error: "Select a date and time" }),
   reason: z.string().optional(),
   note: z.string().optional(),
   cancellationReason: z

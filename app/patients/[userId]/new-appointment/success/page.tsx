@@ -8,9 +8,11 @@ import { Logo } from "@/components/Logo";
 
 const RequestSuccess = async ({
   searchParams,
-  params: { userId },
+  params,
 }: SearchParamProps) => {
-  const appointmentId = (searchParams?.appointmentId as string) || "";
+  const { userId } = await params;
+  const { appointmentId: rawAppointmentId } = await searchParams;
+  const appointmentId = typeof rawAppointmentId === "string" ? rawAppointmentId : "";
   const appointment = appointmentId
     ? await getAppointment(appointmentId)
     : undefined;

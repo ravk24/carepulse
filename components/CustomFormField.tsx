@@ -2,7 +2,7 @@
 import { E164Number } from "libphonenumber-js/core";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { Control } from "react-hook-form";
+import { Control, FieldPath, FieldValues } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 
 import {
@@ -33,9 +33,9 @@ export enum FormFieldType {
   SKELETON = "skeleton",
 }
 
-interface CustomProps {
-  control: Control<any>;
-  name: string;
+interface CustomProps<T extends FieldValues = FieldValues> {
+  control: Control<T>;
+  name: FieldPath<T>;
   label?: string;
   placeholder?: string;
   iconSrc?: string;
@@ -48,7 +48,13 @@ interface CustomProps {
   fieldType: FormFieldType;
 }
 
-const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
+const RenderInput = <T extends FieldValues>({
+  field,
+  props,
+}: {
+  field: any;
+  props: CustomProps<T>;
+}) => {
   switch (props.fieldType) {
     case FormFieldType.INPUT:
       return (
@@ -122,7 +128,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
   }
 };
 
-const CustomFormField = (props: CustomProps) => {
+const CustomFormField = <T extends FieldValues>(props: CustomProps<T>) => {
   const { control, name, label } = props;
 
   return (

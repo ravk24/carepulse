@@ -4,7 +4,8 @@ import { AppointmentForm } from "@/components/forms/AppointmentForm";
 import { getPatient } from "@/lib/actions/patient.actions";
 import { Logo } from "@/components/Logo";
 
-const Appointment = async ({ params: { userId } }: SearchParamProps) => {
+const Appointment = async ({ params }: SearchParamProps) => {
+  const { userId } = await params;
   const patient = await getPatient(userId);
 
   // Not registered yet -> the appointment form can't work without a patient record

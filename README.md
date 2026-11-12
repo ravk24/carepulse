@@ -16,12 +16,12 @@ A patient management app for healthcare providers. Patients register and request
 
 | Area | Technology |
 | --- | --- |
-| Framework | [Next.js 14](https://nextjs.org/) (App Router, Server Components, Server Actions) |
+| Framework | [Next.js 15](https://nextjs.org/) + React 19 (App Router, Server Components, Server Actions) |
 | Language | TypeScript |
 | Database, auth & storage | [Supabase](https://supabase.com/) (Postgres, Supabase Auth, Storage) |
 | SMS | [Twilio](https://www.twilio.com/) |
 | UI | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), TanStack Table |
-| Forms & validation | React Hook Form + Zod |
+| Forms & validation | React Hook Form + Zod 4 |
 | Hosting | [Vercel](https://vercel.com/) |
 
 ## How it works

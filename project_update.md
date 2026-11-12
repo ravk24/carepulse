@@ -54,6 +54,13 @@ CarePulse has moved from Appwrite to Supabase. It now has proper admin authentic
   - Node 20.x is discontinued, so `package.json` now pins `engines.node` to `24.x`.
 - Rewrote `README.md`: setup, environment variables, schema, admin creation, deployment and troubleshooting.
 
+### 7. Security updates (Dependabot)
+- Upgraded Next.js 14.2.3 → 15.5.29 and React 18 → 19. This fixes a critical Image Optimization remote code execution and a Server Actions denial of service.
+- Upgraded Zod 3 → 4 (memory-exhaustion fix), with `@hookform/resolvers` 5, `react-datepicker` 8, `lucide-react` 1.x and Twilio 6 (which pulls in a patched `axios`).
+- Pinned patched `postcss` and `minimatch` with npm `overrides`. `npm audit` reports 0 vulnerabilities.
+- Code updated for Next 15's async `cookies()`, `params` and `searchParams`.
+- Verified end to end on a production build: Get Started → Register → Book → Success, and admin sign-in → Schedule.
+
 ## Pending (owner action required)
 
 | Item | Action |
@@ -70,4 +77,4 @@ CarePulse has moved from Appwrite to Supabase. It now has proper admin authentic
 
 - **Patients have no login.** Patient pages are reached by UUIDs in the URL. Adding patient authentication (email or SMS one-time codes) is the main step before using the app with real patient data.
 - The doctor list is a hardcoded constant in `constants/index.ts`.
-- OpenSpec CLI 2.0.0 is installed globally but not yet initialised in this repo (`openspec init`).
+- OpenSpec is initialised (`openspec/`, Claude Code skills in `.claude/skills/`). Start a change with `/openspec-propose`.

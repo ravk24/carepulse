@@ -12,7 +12,7 @@ export const signInAdmin = async ({
   email: string;
   password: string;
 }): Promise<{ error?: string }> => {
-  const supabase = createAuthClient();
+  const supabase = await createAuthClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -30,7 +30,7 @@ export const signInAdmin = async ({
 
 // SIGN OUT ADMIN
 export const signOutAdmin = async () => {
-  const supabase = createAuthClient();
+  const supabase = await createAuthClient();
   await supabase.auth.signOut();
   redirect("/");
 };

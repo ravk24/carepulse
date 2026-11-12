@@ -2,8 +2,8 @@
 
 declare type SearchParamProps = {
   //Index signature "[key: string]: string"
-  params: { [key: string]: string }; //refer to the bottom notes
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ [key: string]: string }>; //refer to the bottom notes (async in Next 15)
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 declare type Gender = "male" | "female" | "other";

@@ -3,8 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { Resolver, useForm } from "react-hook-form";
+
 import { SelectItem } from "@/components/ui/select";
 import { Doctors } from "@/constants";
 import {
@@ -17,6 +17,14 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { DoctorAvatar } from "../DoctorAvatar";
+
+type AppointmentFormValues = {
+  primaryPhysician: string;
+  schedule: Date;
+  reason?: string;
+  note?: string;
+  cancellationReason?: string;
+};
 
 export const AppointmentForm = ({
   userId,
@@ -37,8 +45,9 @@ export const AppointmentForm = ({
 
   const AppointmentFormValidation = getAppointmentSchema(type);
 
-  const form = useForm<z.infer<typeof AppointmentFormValidation>>({
-    resolver: zodResolver(AppointmentFormValidation),
+  const form = useForm<AppointmentFormValues>({
+    // The three schemas (create/schedule/cancel) share one shape; only the required fields differ
+    resolver: zodResolver(AppointmentFormValidation) as Resolver<AppointmentFormValues>,
     defaultValues: {
       primaryPhysician: appointment ? appointment?.primaryPhysician : "",
       schedule: appointment
@@ -50,9 +59,7 @@ export const AppointmentForm = ({
     },
   });
 
-  const onSubmit = async (
-    values: z.infer<typeof AppointmentFormValidation>
-  ) => {
+  const onSubmit = async (values: AppointmentFormValues) => {
     setIsLoading(true);
     setSubmitError("");
 
