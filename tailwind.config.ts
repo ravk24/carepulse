@@ -24,6 +24,7 @@ const config = {
         green: {
           500: "#24AE7C",
           600: "#0D2A1F",
+          700: "#198058", // primary button bg: 4.9:1 contrast with white text (WCAG AA)
         },
         blue: {
           500: "#79B5EC",

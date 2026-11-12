@@ -20,7 +20,7 @@ const AdminPage = async () => {
             src="/assets/icons/logo-full.svg"
             height={32}
             width={162}
-            alt="logo"
+            alt="CarePulse"
             className="h-8 w-fit"
           />
         </Link>

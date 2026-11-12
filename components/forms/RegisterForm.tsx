@@ -20,7 +20,6 @@ import {
 import { registerPatient } from "@/lib/actions/patient.actions";
 import { PatientFormValidation } from "@/lib/validation";
 
-import "react-datepicker/dist/react-datepicker.css";
 import "react-phone-number-input/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import { FileUploader } from "../FileUploader";

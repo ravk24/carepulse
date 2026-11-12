@@ -1,11 +1,10 @@
 /* eslint-disable no-unused-vars */
 import { E164Number } from "libphonenumber-js/core";
+import dynamic from "next/dynamic";
 import Image from "next/image";
-import ReactDatePicker from "react-datepicker";
 import { Control } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 
-import { Checkbox } from "./ui/checkbox";
 import {
   FormControl,
   FormField,
@@ -14,8 +13,14 @@ import {
   FormMessage,
 } from "./ui/form";
 import { Input } from "./ui/input";
-import { Select, SelectContent, SelectTrigger, SelectValue } from "./ui/select";
 import { Textarea } from "./ui/textarea";
+
+// Heavier field types are code-split: each page only downloads the ones it renders
+// (e.g. the home page form never loads react-datepicker or Radix Select).
+// They're still server-rendered, so there's no layout shift.
+const DatePickerField = dynamic(() => import("./fields/DatePickerField"));
+const SelectField = dynamic(() => import("./fields/SelectField"));
+const CheckboxField = dynamic(() => import("./fields/CheckboxField"));
 
 // Enums in TypeScript are used to define a set of NAMED CONSTANTS. They allow you to associate friendly names with a set of constant values, which makes the code more readable and easier to maintain.
 export enum FormFieldType {
@@ -53,7 +58,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
               src={props.iconSrc}
               height={24}
               width={24}
-              alt={props.iconAlt || "icon"}
+              alt={props.iconAlt ?? ""}
               className="ml-2"
             />
           )}
@@ -94,55 +99,21 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
       );
     case FormFieldType.CHECKBOX:
       return (
-        <FormControl>
-          <div className="flex items-center gap-4">
-            <Checkbox
-              id={props.name}
-              checked={field.value}
-              onCheckedChange={field.onChange}
-            />
-            <label htmlFor={props.name} className="checkbox-label">
-              {props.label}
-            </label>
-          </div>
-        </FormControl>
+        <CheckboxField field={field} name={props.name} label={props.label} />
       );
     case FormFieldType.DATE_PICKER:
       return (
-        <div className="flex rounded-md border border-dark-500 bg-dark-400">
-          <Image
-            src="/assets/icons/calendar.svg"
-            height={24}
-            width={24}
-            alt="user"
-            className="ml-2"
-          />
-          <FormControl>
-            <ReactDatePicker
-              showTimeSelect={props.showTimeSelect ?? false}
-              selected={field.value}
-              onChange={(date: Date) => field.onChange(date)}
-              timeInputLabel="Time:"
-              dateFormat={props.dateFormat ?? "MM/dd/yyyy"}
-              wrapperClassName="date-picker"
-            />
-          </FormControl>
-        </div>
+        <DatePickerField
+          field={field}
+          dateFormat={props.dateFormat}
+          showTimeSelect={props.showTimeSelect}
+        />
       );
     case FormFieldType.SELECT:
       return (
-        <FormControl>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <FormControl>
-              <SelectTrigger className="shad-select-trigger">
-                <SelectValue placeholder={props.placeholder} />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent className="shad-select-content">
-              {props.children}
-            </SelectContent>
-          </Select>
-        </FormControl>
+        <SelectField field={field} placeholder={props.placeholder}>
+          {props.children}
+        </SelectField>
       );
     case FormFieldType.SKELETON:
       return props.renderSkeleton ? props.renderSkeleton(field) : null;

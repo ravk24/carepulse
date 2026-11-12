@@ -1,29 +1,28 @@
 import Image from "next/image";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
+import { AdminLoginGate } from "@/components/AdminLoginGate";
 import { PatientForm } from "@/components/forms/PatientForm";
-import { AdminLoginModal } from "@/components/AdminLoginModal";
-import { getAdminUser } from "@/lib/auth";
 
-const Home = async ({ searchParams }: SearchParamProps) => {
-  const isAdmin = searchParams?.admin === "true";
-
-  // Already signed in as admin -> go straight to the dashboard
-  if (isAdmin && (await getAdminUser())) redirect("/admin");
-
+// Fully static page (no searchParams / cookies read on the server), so it's prerendered
+// at build time and served straight from the CDN.
+const Home = () => {
   return (
     <div className="flex h-screen max-h-screen">
-      {isAdmin && <AdminLoginModal />}
+      <Suspense fallback={null}>
+        <AdminLoginGate />
+      </Suspense>
 
       <section className="remove-scrollbar container my-auto">
         <div className="sub-container max-w-[496px]">
-          <Link href="/">
+          <Link href="/" aria-label="CarePulse home">
             <Image
               src="/assets/icons/logo-full.svg"
-              height={1000}
-              width={1000}
-              alt="patient"
+              height={32}
+              width={162}
+              alt="CarePulse"
+              priority
               className="mb-0 h-10 w-fit"
             />
           </Link>
@@ -34,7 +33,7 @@ const Home = async ({ searchParams }: SearchParamProps) => {
             <p className="justify-items-end text-dark-600 xl:text-left">
               © 2025 CarePluse
             </p>
-            <Link href="/?admin=true" className="text-green-500">
+            <Link href="/?admin=true" prefetch={false} className="text-green-500">
               Admin
             </Link>
           </div>
@@ -45,7 +44,9 @@ const Home = async ({ searchParams }: SearchParamProps) => {
         src="/assets/images/onboarding-img.png"
         height={1000}
         width={1000}
-        alt="patient"
+        alt=""
+        sizes="(min-width: 768px) 50vw, 1px"
+        priority
         className="side-img max-w-[50%]"
       />
     </div>

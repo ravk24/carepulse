@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { Doctors } from "@/constants";
 import { getAppointment } from "@/lib/actions/appointment.actions";
@@ -14,8 +13,6 @@ const RequestSuccess = async ({
   const appointmentId = (searchParams?.appointmentId as string) || "";
   const appointment = await getAppointment(appointmentId);
   const user = await getUser(userId);
-  Sentry.metrics.set("user_view_appointment-success", user.name);
-  //go-to sentry and check the metrics in side tab->check for custom enteries in user_view tab->add all the metric to track
   const doctor = Doctors.find(
     (doctor) => doctor.name === appointment.primaryPhysician
   );
@@ -26,9 +23,9 @@ const RequestSuccess = async ({
         <Link href="/">
           <Image
             src="/assets/icons/logo-full.svg"
-            height={1000}
-            width={1000}
-            alt="logo"
+            height={32}
+            width={162}
+            alt="CarePulse"
             className="h-10 w-fit"
           />
         </Link>
