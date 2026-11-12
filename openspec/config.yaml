@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+  Deployed on Vercel from main (Node.js 24.x); every change must build with only the env vars listed in .env.example
+  Supabase service-role key is server-only; never expose it or add RLS policies that let the anon key read patient data
+  Identity documents stay in a private bucket and are only shared via short-lived signed URLs
+  Admin access must be enforced server-side (middleware, page and server action), never client-side only
+  Never commit secrets from .env.local
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
