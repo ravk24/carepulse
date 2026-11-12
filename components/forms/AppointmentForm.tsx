@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -17,6 +16,7 @@ import { Appointment } from "@/types/supabase.types";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
+import { DoctorAvatar } from "../DoctorAvatar";
 
 export const AppointmentForm = ({
   userId,
@@ -165,14 +165,8 @@ export const AppointmentForm = ({
               {Doctors.map((doctor, i) => (
                 <SelectItem key={doctor.name + i} value={doctor.name}>
                   <div className="flex cursor-pointer items-center gap-2">
-                    <Image
-                      src={doctor.image}
-                      width={32}
-                      height={32}
-                      alt="doctor"
-                      className="rounded-full border border-dark-500"
-                    />
-                    <p>{doctor.name}</p>
+                    <DoctorAvatar name={doctor.name} />
+                    <p>Dr. {doctor.name}</p>
                   </div>
                 </SelectItem>
               ))}
