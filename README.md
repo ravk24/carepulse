@@ -1,36 +1,165 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CarePulse
 
-## Getting Started
+A patient management app for healthcare providers. Patients register and request appointments in a few steps; admins review, schedule or cancel them from a dashboard, and patients get an SMS when their appointment is confirmed or cancelled.
 
-First, run the development server:
+**Live:** https://carepulse-sigma-red.vercel.app
+
+## Features
+
+- **Patient onboarding** – name, email and phone to get started, then a full registration form (personal details, medical history, insurance, primary physician, identity document upload, consent).
+- **Appointment requests** – choose a doctor, date/time and reason; the request is saved as *pending*.
+- **Admin dashboard** – stats for scheduled / pending / cancelled appointments and a paginated table to schedule or cancel each request.
+- **SMS notifications** – patients are texted via Twilio when an admin schedules or cancels their appointment.
+- **Secure by default** – admin access is enforced on the server, the database is locked down with Row Level Security, and identity documents live in a private storage bucket.
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Framework | [Next.js 14](https://nextjs.org/) (App Router, Server Components, Server Actions) |
+| Language | TypeScript |
+| Database, auth & storage | [Supabase](https://supabase.com/) (Postgres, Supabase Auth, Storage) |
+| SMS | [Twilio](https://www.twilio.com/) |
+| UI | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), TanStack Table |
+| Forms & validation | React Hook Form + Zod |
+| Hosting | [Vercel](https://vercel.com/) |
+
+## How it works
+
+```mermaid
+flowchart LR
+    P[Patient] -->|Get Started| U[(users)]
+    P -->|Register + ID upload| PT[(patients)]
+    PT -.-> B[[Private bucket:<br/>identification-documents]]
+    P -->|Request| A[(appointments<br/>status: pending)]
+    AD[Admin] -->|Sign in| AUTH{{Supabase Auth<br/>role = admin}}
+    AUTH --> D[Dashboard]
+    D -->|Schedule / Cancel| A
+    A -->|status change| SMS[Twilio SMS to patient]
+```
+
+- All database access happens on the server (Server Components and Server Actions) using the Supabase **service role** key. That key is never sent to the browser.
+- Row Level Security is enabled on every table with **no policies**, so the public (anon) key can't read or write any data.
+- **Admins** are Supabase Auth users whose `app_metadata.role` is `"admin"`. `app_metadata` can only be changed with the service role, so users can't grant it to themselves. Access is checked in `middleware.ts`, on the admin page, and inside every admin-only action.
+- Identity documents are stored in a **private** bucket; only their storage path is saved. Use `createSignedDocumentUrl()` in `lib/supabase.config.ts` to get a short-lived link.
+
+## Getting started
+
+### Prerequisites
+
+- **Node.js 24.x** (pinned in `package.json`)
+- A [Supabase](https://supabase.com/dashboard) project
+- *(Optional)* A [Twilio](https://console.twilio.com/) account with an SMS-capable phone number
+
+### 1. Install
+
+```bash
+git clone https://github.com/ravk24/carepulse.git
+cd carepulse
+npm install
+```
+
+### 2. Configure environment variables
+
+Copy `.env.example` to `.env.local` and fill it in:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Required | Where to find it |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase → Project Settings → API (anon / publishable key) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase → Project Settings → API. **Secret: full database access, server-only.** |
+| `SUPABASE_BUCKET` | No | Defaults to `identification-documents` |
+| `TWILIO_ACCOUNT_SID` | No | Twilio Console |
+| `TWILIO_AUTH_TOKEN` | No | Twilio Console |
+| `TWILIO_PHONE_NUMBER` | No | A number **owned by your Twilio account**, in E.164 format (e.g. `+15551234567`) |
+
+If the Twilio variables are empty, the app still works and simply skips sending SMS.
+
+### 3. Create the database
+
+In the Supabase dashboard, open **SQL Editor**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and run it. It creates the `users`, `patients` and `appointments` tables, enables Row Level Security, and creates the private storage bucket. The script is safe to run more than once.
+
+### 4. Create an admin account
+
+1. Supabase → **Authentication → Users → Add user** (email + password, auto-confirm).
+2. Grant the admin role in the SQL Editor:
+
+   ```sql
+   update auth.users
+   set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'
+   where email = 'admin@example.com';
+   ```
+
+3. Recommended: **Authentication → Sign In / Providers →** turn off *Allow new users to sign up*. Only admins use Supabase Auth in this app.
+
+### 5. Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. To reach the dashboard, click **Admin** in the footer (or go to `/admin`) and sign in with the admin account.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the development server |
+| `npm run build` | Create a production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  page.tsx                      # Home: "Get Started" form (static) + admin sign-in modal
+  admin/page.tsx                # Admin dashboard (admins only)
+  patients/[userId]/
+    register/                   # Full patient registration
+    new-appointment/            # Appointment request form
+    new-appointment/success/    # Confirmation page
+components/
+  forms/                        # Patient, Register and Appointment forms
+  fields/                       # Lazily loaded date picker / select / checkbox fields
+  table/                        # Admin appointments table
+  ui/                           # shadcn/ui primitives
+  Logo.tsx, DoctorAvatar.tsx, AdminLoginModal.tsx, ...
+lib/
+  actions/                      # Server Actions: patients, appointments, admin auth
+  auth.ts                       # Session helpers: getAdminUser, requireAdminPage, assertAdmin
+  supabase.config.ts            # Server-only Supabase client + signed document URLs
+  validation.ts                 # Zod schemas
+constants/index.ts              # Doctors list, form defaults, ID types
+middleware.ts                   # Protects /admin, refreshes the auth session
+supabase/schema.sql             # Database schema, RLS and storage bucket
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment (Vercel)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+1. Import the repository into Vercel.
+2. Add the environment variables from the table above under **Settings → Environment Variables** (for Production, and Preview if you use it).
+3. Set **Settings → Build and Deployment → Node.js Version** to **24.x**. `package.json` also pins `24.x`.
+4. Deploy. Every push to `main` deploys automatically.
 
-## Deploy on Vercel
+> Environment variables only apply to deployments started **after** they're added, so redeploy after changing them.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Troubleshooting
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+| Symptom | Cause and fix |
+| --- | --- |
+| Build fails with `supabaseUrl is required` | The Supabase environment variables aren't set in the build environment (e.g. on Vercel). Add them and redeploy. |
+| `Could not find the table 'public.users'` (PGRST205), or "Get Started" does nothing | `supabase/schema.sql` hasn't been run on this Supabase project. |
+| Vercel: *Node.js Version "20.x" is discontinued* | Set the project's Node.js version to 24.x (or newer) in Vercel settings. |
+| Twilio error `21266` (*To and From cannot be the same*) | `TWILIO_PHONE_NUMBER` is set to a personal number. Use a number your Twilio account owns. |
+| SMS not delivered on a Twilio **trial** account | Trial accounts can only text verified numbers. For India, enable it under Messaging → Settings → Geo permissions; production delivery to India requires DLT registration. |
+| Admin sign-in says *Invalid email or password* for a valid user | The user doesn't have `app_metadata.role = "admin"`. Run the SQL in step 4. |
+
+## Known limitations
+
+- **Patients don't log in.** Patient pages and actions are identified only by IDs in the URL (random UUIDs). Adding patient authentication (e.g. email or SMS one-time codes) and restricting each patient to their own records is the recommended next step before handling real patient data.
+- The doctors list is a static constant in `constants/index.ts`.
