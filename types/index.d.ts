@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-
 declare type SearchParamProps = {
   //Index signature "[key: string]: string"
   params: Promise<{ [key: string]: string }>; //refer to the bottom notes (async in Next 15)

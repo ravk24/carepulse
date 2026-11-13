@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { E164Number } from "libphonenumber-js/core";
 import dynamic from "next/dynamic";
 import Image from "next/image";
