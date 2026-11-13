@@ -22,6 +22,8 @@ A patient management app for healthcare providers. Patients register and request
 | SMS | [Twilio](https://www.twilio.com/) |
 | UI | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), TanStack Table |
 | Forms & validation | React Hook Form + Zod 4 |
+| Testing | Vitest + React Testing Library, local Supabase (Docker) + MSW, Playwright |
+| CI | GitHub Actions |
 | Hosting | [Vercel](https://vercel.com/) |
 
 ## How it works
@@ -111,7 +113,43 @@ Open http://localhost:3000. To reach the dashboard, click **Admin** in the foote
 | `npm run dev` | Start the development server |
 | `npm run build` | Create a production build |
 | `npm run start` | Serve the production build |
-| `npm run lint` | Run ESLint |
+| `npm run lint` | Run ESLint (ESLint 9 flat config, `eslint.config.mjs`) |
+| `npm test` | Unit + component tests (fast, no Docker) |
+| `npm run test:watch` | Unit + component tests in watch mode |
+| `npm run db:test:start` / `db:test:stop` / `db:test:reset` | Start, stop or reset the local Supabase test database (needs Docker) |
+| `npm run test:integration` | Server actions against the local Supabase database |
+| `npm run test:coverage` | Unit + component + integration with a coverage report and thresholds |
+| `npm run test:e2e` | Playwright E2E tests against a production build and the local database |
+| `npm run test:e2e:ui` | Playwright in interactive UI mode |
+
+## Testing
+
+153 automated tests across four layers. All tests run against a **local** Supabase in Docker, never the production project, and never send real SMS (Twilio is mocked with MSW).
+
+| Layer | Tests | What it covers |
+| --- | --- | --- |
+| Unit | 59 | Zod schemas, utilities, constants, Supabase helpers |
+| Component | 44 | Patient, Register and Appointment forms, admin login modal, admin table (server actions mocked) |
+| Integration | 25 | Real server actions against local Postgres: booking, admin checks, cascade deletes, private uploads, Twilio errors, server-side redirects |
+| End-to-end | 25 runs | The full patient journey and admin dashboard in a real browser, plus mobile layout, accessibility (axe), dark-theme contrast and keyboard-only booking |
+
+Coverage: about 94% of lines and 84% of branches. The build fails below the thresholds.
+
+```bash
+npm test                 # quick check, no Docker
+npm run db:test:start    # once: start local Supabase (Docker Desktop must be running)
+npm run test:coverage    # unit + component + integration
+npm run test:e2e         # builds the app and runs Playwright
+npm run db:test:stop     # when done
+```
+
+First-time E2E setup: `npx playwright install chromium`.
+
+**CI:** `.github/workflows/test.yml` runs on every push and pull request to `main` in two jobs:
+1. lint, type-check, unit and component tests (about 1 minute);
+2. local Supabase, integration tests with coverage, then E2E (about 3 minutes).
+
+Failed E2E runs upload a Playwright report with traces.
 
 ## Project structure
 
@@ -135,8 +173,15 @@ lib/
   supabase.config.ts            # Server-only Supabase client + signed document URLs
   validation.ts                 # Zod schemas
 constants/index.ts              # Doctors list, form defaults, ID types
+tests/
+  unit/ component/              # Vitest (jsdom for components)
+  integration/                  # Vitest + local Supabase + MSW
+  e2e/                          # Playwright specs, admin login setup
+  support/                      # Factories, MSW handlers, test setup
+.github/workflows/test.yml      # CI
 middleware.ts                   # Protects /admin, refreshes the auth session
 supabase/schema.sql             # Database schema, RLS and storage bucket
+supabase/config.toml, seed.sql  # Local test database config and seed (admin test user)
 ```
 
 ## Deployment (Vercel)
@@ -163,3 +208,4 @@ supabase/schema.sql             # Database schema, RLS and storage bucket
 
 - **Patients don't log in.** Patient pages and actions are identified only by IDs in the URL (random UUIDs). Adding patient authentication (e.g. email or SMS one-time codes) and restricting each patient to their own records is the recommended next step before handling real patient data.
 - The doctors list is a static constant in `constants/index.ts`.
+- The admin dashboard loads at most **1,000 appointments** (Supabase's default row limit), while the counts include all of them. Fine for now; it needs paging before the table grows past that.
