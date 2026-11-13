@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 import { FormControl } from "../ui/form";
 
-// Loaded on demand by CustomFormField so react-datepicker (and its CSS)
-// only download on forms that actually have a date field.
+// Loaded on demand by CustomFormField so react-datepicker's JS only downloads on forms that
+// actually have a date field. Its CSS is imported in app/layout.tsx; see the comment there.
 const DatePickerField = ({
   field,
   dateFormat,

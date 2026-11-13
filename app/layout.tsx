@@ -1,4 +1,10 @@
 import type { Metadata } from "next";
+// react-datepicker's CSS is loaded here, not in the lazily loaded DatePickerField. A CSS import
+// inside a next/dynamic chunk occasionally left a duplicate <link> that never finished loading.
+// React 19 waits for stylesheets before showing a new page, so router.push() to a page with a
+// date picker could hang forever (found by stress-running the UI-15 keyboard E2E test).
+// ~22 KB (~4 KB gzipped) on every page is a fair price for that.
+import "react-datepicker/dist/react-datepicker.css";
 import "./globals.css";
 import { Plus_Jakarta_Sans as FontSans } from "next/font/google";
 

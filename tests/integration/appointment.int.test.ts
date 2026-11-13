@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createAppointment,
+  createAppointmentAndContinue,
   getAppointment,
   getRecentAppointmentList,
   updateAppointment,
@@ -175,5 +176,42 @@ describe("admin-only actions", () => {
     await makePatient(user.$id);
     const result = await updateAppointment(scheduleInput("00000000-0000-0000-0000-000000000000", user.$id));
     expect(result.error).toMatch(/^Couldn't update the appointment/);
+  });
+});
+
+describe("createAppointmentAndContinue (what the patient's form calls)", () => {
+  it("BK-01 saves the appointment and redirects to its success page", async () => {
+    const user = await makeUser();
+    const patient = await makePatient(user.$id);
+    const input = {
+      userId: user.$id,
+      patient: patient.$id,
+      primaryPhysician: "Ashok Seth",
+      schedule: new Date("2030-01-15T10:00:00Z"),
+      reason: "Back pain",
+      status: "pending" as Status,
+      note: "",
+    };
+
+    const error = (await createAppointmentAndContinue(input).catch((e: Error) => e)) as Error;
+    expect(error.message).toMatch(/^NEXT_REDIRECT:/);
+    const url = new URL(error.message.replace("NEXT_REDIRECT:", ""), "http://app");
+    expect(url.pathname).toBe(`/patients/${user.$id}/new-appointment/success`);
+    const appointmentId = url.searchParams.get("appointmentId")!;
+    expect(await getAppointment(appointmentId)).toMatchObject({ status: "pending", reason: "Back pain" });
+  });
+
+  it("VAL-16 on failure returns the error for the form and does not redirect", async () => {
+    const user = await makeUser();
+    const result = await createAppointmentAndContinue({
+      userId: user.$id,
+      patient: "00000000-0000-0000-0000-000000000000", // no such patient -> foreign key error
+      primaryPhysician: "Ashok Seth",
+      schedule: new Date("2030-01-15T10:00:00Z"),
+      reason: "Back pain",
+      status: "pending",
+      note: "",
+    });
+    expect(result).toEqual({ error: expect.stringMatching(/couldn't create the appointment/i) });
   });
 });

@@ -3,15 +3,15 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppointmentForm } from "@/components/forms/AppointmentForm";
-import { createAppointment, updateAppointment } from "@/lib/actions/appointment.actions";
+import { createAppointmentAndContinue, updateAppointment } from "@/lib/actions/appointment.actions";
 
 vi.mock("@/lib/actions/appointment.actions", () => ({
-  createAppointment: vi.fn(),
+  createAppointmentAndContinue: vi.fn(),
   updateAppointment: vi.fn(),
 }));
 
-const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+// On success the action redirects on the server (Next.js handles that), so there's no
+// router.push() to check here; the redirect itself is covered by the integration tests.
 
 const existing = {
   $id: "appt-1",
@@ -41,7 +41,7 @@ describe("AppointmentForm", () => {
 
     expect(await screen.findByText("Select at least one doctor")).toBeInTheDocument();
     expect(screen.getByText("Reason must be at least 2 characters")).toBeInTheDocument();
-    expect(createAppointment).not.toHaveBeenCalled();
+    expect(createAppointmentAndContinue).not.toHaveBeenCalled();
   });
 
   it("BK-06 create without patientId shows an error and never calls updateAppointment", async () => {
@@ -49,34 +49,33 @@ describe("AppointmentForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Submit Appointment" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/complete registration first/i);
-    expect(createAppointment).not.toHaveBeenCalled();
+    expect(createAppointmentAndContinue).not.toHaveBeenCalled();
     expect(updateAppointment).not.toHaveBeenCalled();
   });
 
-  it("BK-01 create: submits a pending appointment and goes to the success page", async () => {
-    vi.mocked(createAppointment).mockResolvedValue({ appointment: { $id: "new-1" } as any });
+  it("BK-01 create: submits a pending appointment to the server action (which redirects to success)", async () => {
+    vi.mocked(createAppointmentAndContinue).mockResolvedValue(undefined as never); // success = redirected, nothing returned
     render(<AppointmentForm userId="u1" patientId="p1" type="create" appointment={existing} />);
     await userEvent.click(screen.getByRole("button", { name: "Submit Appointment" }));
 
-    await waitFor(() => expect(createAppointment).toHaveBeenCalledTimes(1));
-    expect(vi.mocked(createAppointment).mock.calls[0][0]).toMatchObject({
+    await waitFor(() => expect(createAppointmentAndContinue).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(createAppointmentAndContinue).mock.calls[0][0]).toMatchObject({
       userId: "u1",
       patient: "p1",
       primaryPhysician: "Ashok Seth",
       reason: "Back pain",
       status: "pending",
     });
-    expect(push).toHaveBeenCalledWith("/patients/u1/new-appointment/success?appointmentId=new-1");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument(); // no error flashed while redirecting
   });
 
   it("VAL-16 shows a server error in the alert area and re-enables the button", async () => {
-    vi.mocked(createAppointment).mockResolvedValue({ error: "Couldn't create the appointment." });
+    vi.mocked(createAppointmentAndContinue).mockResolvedValue({ error: "Couldn't create the appointment." });
     render(<AppointmentForm userId="u" patientId="p" type="create" appointment={existing} />);
     await userEvent.click(screen.getByRole("button", { name: "Submit Appointment" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't create the appointment.");
     expect(screen.getByRole("button", { name: "Submit Appointment" })).toBeEnabled();
-    expect(push).not.toHaveBeenCalled();
   });
 
   it("UI-08 schedule: pre-fills the doctor, sends status=scheduled and closes the modal", async () => {

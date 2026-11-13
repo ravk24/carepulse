@@ -23,7 +23,7 @@ test.describe("patient booking", () => {
     await page.goto("/");
     await page.getByPlaceholder("John Doe").fill("Different Name");
     await page.getByPlaceholder("johndoe@gmail.com").fill(first.email);
-    await page.getByPlaceholder("(555) 123-4567").fill("5550000000");
+    await page.getByPlaceholder("(555) 123-4567").fill("+15550000000");
     await page.getByRole("button", { name: "Get Started" }).click();
     // Same user id as before, and since they're registered, /register forwards to booking (BK-03)
     await expect(page).toHaveURL(new RegExp(`/patients/${first.userId}/new-appointment$`));

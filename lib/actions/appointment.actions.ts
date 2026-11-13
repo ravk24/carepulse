@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import twilio from "twilio";
 
 import { Appointment } from "@/types/supabase.types";
@@ -41,6 +42,18 @@ export const createAppointment = async ({
     console.error("An error occurred while creating a new appointment:", error);
     return { error: toErrorMessage(error, "Couldn't create the appointment. Please try again.") };
   }
+};
+
+// CREATE, THEN GO TO THE SUCCESS PAGE (what the patient's AppointmentForm calls)
+// Redirects on the server: router.push() on the client after the action resolved sometimes
+// never finished (see registerPatientAndContinue in patient.actions.ts).
+// Returns only on failure, with the error message for the form.
+export const createAppointmentAndContinue = async (params: CreateAppointmentParams) => {
+  const result = await createAppointment(params);
+  if (result.appointment) {
+    redirect(`/patients/${params.userId}/new-appointment/success?appointmentId=${result.appointment.$id}`);
+  }
+  return result;
 };
 
 //  GET RECENT APPOINTMENTS

@@ -3,12 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import RegisterForm from "@/components/forms/RegisterForm";
-import { registerPatient } from "@/lib/actions/patient.actions";
+import { registerPatientAndContinue } from "@/lib/actions/patient.actions";
 
-vi.mock("@/lib/actions/patient.actions", () => ({ registerPatient: vi.fn() }));
+vi.mock("@/lib/actions/patient.actions", () => ({ registerPatientAndContinue: vi.fn() }));
 
-const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+// On success the action redirects on the server (Next.js handles that), so there's no
+// router.push() to check here; the redirect itself is covered by the integration tests.
 
 const user = { $id: "user-1", name: "John Doe", email: "john@example.com", phone: "+15551234567" };
 
@@ -45,7 +45,7 @@ describe("RegisterForm", () => {
     expect(screen.getByText("You must consent to treatment in order to proceed")).toBeInTheDocument();
     expect(screen.getByText("You must consent to disclosure in order to proceed")).toBeInTheDocument();
     expect(screen.getByText("You must consent to privacy in order to proceed")).toBeInTheDocument();
-    expect(registerPatient).not.toHaveBeenCalled();
+    expect(registerPatientAndContinue).not.toHaveBeenCalled();
   });
 
   it("VAL-10 one unticked consent still blocks submit", async () => {
@@ -57,12 +57,12 @@ describe("RegisterForm", () => {
     await u.click(screen.getByRole("button", { name: /submit and continue/i }));
 
     expect(await screen.findByText("You must consent to privacy in order to proceed")).toBeInTheDocument();
-    expect(registerPatient).not.toHaveBeenCalled();
+    expect(registerPatientAndContinue).not.toHaveBeenCalled();
   });
 
-  it("BK-01 submits a valid patient (with ID upload) and goes to booking", async () => {
+  it("BK-01 submits a valid patient (with ID upload) to the server action (which redirects to booking)", async () => {
     URL.createObjectURL = vi.fn(() => "blob:preview");
-    vi.mocked(registerPatient).mockResolvedValue({ $id: "patient-1" });
+    vi.mocked(registerPatientAndContinue).mockResolvedValue(undefined);
     const { container } = render(<RegisterForm user={user} />);
     const u = await fillRequired();
 
@@ -75,8 +75,8 @@ describe("RegisterForm", () => {
     await u.click(screen.getByLabelText(/reviewed and agree/i));
     await u.click(screen.getByRole("button", { name: /submit and continue/i }));
 
-    await waitFor(() => expect(registerPatient).toHaveBeenCalledTimes(1));
-    const sent = vi.mocked(registerPatient).mock.calls[0][0];
+    await waitFor(() => expect(registerPatientAndContinue).toHaveBeenCalledTimes(1));
+    const sent = vi.mocked(registerPatientAndContinue).mock.calls[0][0];
     expect(sent).toMatchObject({
       userId: "user-1",
       gender: "female",
@@ -87,6 +87,5 @@ describe("RegisterForm", () => {
     // The file travels as FormData (server actions can't receive File objects inside plain objects)
     expect(sent.identificationDocument).toBeInstanceOf(FormData);
     expect(sent.identificationDocument!.get("fileName")).toBe("id.png");
-    expect(push).toHaveBeenCalledWith("/patients/user-1/new-appointment");
   });
 });

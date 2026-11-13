@@ -19,7 +19,7 @@ export async function startAsPatient(page: Page, name = "E2E Patient", email = u
   await page.goto("/");
   await page.getByPlaceholder("John Doe").fill(name);
   await page.getByPlaceholder("johndoe@gmail.com").fill(email);
-  await page.getByPlaceholder("(555) 123-4567").fill("5551234567");
+  await page.getByPlaceholder("(555) 123-4567").fill("+15551234567"); // full number, see registerPatient
   await page.getByRole("button", { name: "Get Started" }).click();
   await expect(page).toHaveURL(/\/patients\/[0-9a-f-]{36}\/register$/);
   const userId = page.url().split("/patients/")[1].split("/")[0];
@@ -31,7 +31,9 @@ export async function registerPatient(page: Page, doctor = "Devi Prasad Shetty")
   await page.getByPlaceholder("14 street, New york, NY - 5101").fill("221B Baker Street");
   await page.getByPlaceholder("Software Engineer").fill("Engineer");
   await page.getByPlaceholder("Guardian's name").fill("Jane Doe");
-  await page.getByPlaceholder("(555) 123-4567").nth(1).fill("5557654321");
+  // fill() replaces the whole value including the "+1" prefix, and bare digits would be read
+  // as another country ("5557654321" -> Brazil, +55), so type the full international number.
+  await page.getByPlaceholder("(555) 123-4567").nth(1).fill("+15557654321");
   await page.getByRole("combobox", { name: "Primary care physician" }).click();
   await page.getByRole("option", { name: `Dr. ${doctor}` }).click();
   await page.getByPlaceholder("BlueCross BlueShield").fill("BlueCross");

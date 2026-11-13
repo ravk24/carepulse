@@ -1,14 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState } from "react";
 import { Resolver, useForm } from "react-hook-form";
 
 import { SelectItem } from "@/components/ui/select";
 import { Doctors } from "@/constants";
 import {
-  createAppointment,
+  createAppointmentAndContinue,
   updateAppointment,
 } from "@/lib/actions/appointment.actions";
 import { getAppointmentSchema } from "@/lib/validation";
@@ -39,7 +38,6 @@ export const AppointmentForm = ({
   appointment?: Appointment;
   setOpen?: Dispatch<SetStateAction<boolean>>;
 }) => {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -96,16 +94,11 @@ export const AppointmentForm = ({
           note: values.note,
         };
 
-        const result = await createAppointment(appointment);
-
-        if (result.appointment) {
-          form.reset();
-          router.push(
-            `/patients/${userId}/new-appointment/success?appointmentId=${result.appointment.$id}`
-          );
-        } else {
-          setSubmitError(result.error ?? "Couldn't create the appointment.");
-        }
+        // On success the server action redirects to the success page itself,
+        // so this only returns when creating the appointment failed.
+        // (After a redirect the client may still get undefined back, hence the check.)
+        const result = await createAppointmentAndContinue(appointment);
+        if (result) setSubmitError(result.error ?? "Couldn't create the appointment.");
       } else {
         const appointmentToUpdate = {
           userId,

@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -16,7 +15,7 @@ import {
   IdentificationTypes,
   PatientFormDefaultValues,
 } from "@/constants";
-import { registerPatient } from "@/lib/actions/patient.actions";
+import { registerPatientAndContinue } from "@/lib/actions/patient.actions";
 import { PatientFormValidation } from "@/lib/validation";
 
 import "react-phone-number-input/style.css";
@@ -26,7 +25,6 @@ import SubmitButton from "../SubmitButton";
 import { DoctorAvatar } from "../DoctorAvatar";
 
 const RegisterForm = ({ user }: { user: User }) => {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof PatientFormValidation>>({
@@ -85,11 +83,9 @@ const RegisterForm = ({ user }: { user: User }) => {
         privacyConsent: values.privacyConsent,
       };
 
-      const newPatient = await registerPatient(patient);
-
-      if (newPatient) {
-        router.push(`/patients/${user.$id}/new-appointment`);
-      }
+      // On success the server action redirects to booking itself (see the comment in
+      // patient.actions.ts), so this only returns when registration failed.
+      await registerPatientAndContinue(patient);
     } catch (error) {
       console.log(error);
     }

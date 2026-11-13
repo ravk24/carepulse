@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import {
   SUPABASE_BUCKET,
   TABLES,
@@ -52,6 +54,14 @@ export const getUser = async (userId: string) => {
   }
 };
 
+// CREATE USER, THEN GO TO REGISTRATION (what PatientForm calls)
+// Redirects on the server for the same reason as registerPatientAndContinue below.
+export const createUserAndContinue = async (user: CreateUserParams) => {
+  const newUser = await createUser(user);
+  if (newUser) redirect(`/patients/${newUser.$id}/register`);
+  return undefined;
+};
+
 // REGISTER PATIENT
 export const registerPatient = async ({
   identificationDocument,
@@ -87,6 +97,19 @@ export const registerPatient = async ({
   } catch (error) {
     console.error("An error occurred while creating a new patient:", error);
   }
+};
+
+// REGISTER, THEN GO TO BOOKING (what RegisterForm calls)
+// The redirect happens on the server, inside the action's own response. Calling router.push()
+// on the client after the action resolved sometimes never finished: the URL stayed on /register
+// with no error (about 1 in 40 E2E runs under load, mouse or keyboard). redirect() in a server
+// action is the pattern Next.js recommends, and it has no separate client navigation to race.
+// Returns only on failure (undefined); on success redirect() throws NEXT_REDIRECT, which Next handles.
+export const registerPatientAndContinue = async (params: RegisterUserParams) => {
+  const newPatient = await registerPatient(params);
+  // Outside any try/catch: redirect() works by throwing, and a catch would swallow it
+  if (newPatient) redirect(`/patients/${params.userId}/new-appointment`);
+  return undefined;
 };
 
 // GET PATIENT

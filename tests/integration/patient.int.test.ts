@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { createUser, getPatient, getUser } from "@/lib/actions/patient.actions";
+import {
+  createUser,
+  createUserAndContinue,
+  getPatient,
+  getUser,
+  registerPatientAndContinue,
+} from "@/lib/actions/patient.actions";
 import { getAppointment } from "@/lib/actions/appointment.actions";
 import { SUPABASE_BUCKET, createSignedDocumentUrl, supabase } from "@/lib/supabase.config";
 import { deleteUser, makeAppointment, makePatient, makeUser, uniqueEmail } from "../support/factories";
@@ -92,5 +98,50 @@ describe("patient actions (real local Supabase)", () => {
     expect(await getAppointment(appointment.$id)).toBeUndefined(); // .single() on 0 rows -> error -> undefined
     const { count } = await supabase.from("patients").select("*", { count: "exact", head: true }).eq("id", patient.$id);
     expect(count).toBe(0);
+  });
+});
+
+// The forms call these wrappers. On success they redirect on the server instead of the client
+// calling router.push(), which sometimes never finished. In tests, redirect() is mocked to throw
+// "NEXT_REDIRECT:<url>" (tests/support/setup-integration.ts), the way the real one throws.
+describe("server-side redirects after a successful action", () => {
+  it("BK-01 createUserAndContinue saves the user and redirects to their registration page", async () => {
+    const email = uniqueEmail();
+    await expect(
+      createUserAndContinue({ name: "Test Patient", email, phone: "+15551234567" })
+    ).rejects.toThrow(/^NEXT_REDIRECT:\/patients\/[0-9a-f-]{36}\/register$/);
+
+    const { data } = await supabase.from("users").select("id").eq("email", email).single();
+    await expect(createUserAndContinue({ name: "Again", email, phone: "+15551234567" })).rejects.toThrow(
+      `NEXT_REDIRECT:/patients/${data!.id}/register` // same email -> same user (BK-02)
+    );
+  });
+
+  it("BK-01 registerPatientAndContinue saves the patient and redirects to booking", async () => {
+    const user = await makeUser();
+    const params = {
+      userId: user.$id,
+      name: "Test Patient",
+      email: uniqueEmail(),
+      phone: "+15551234567",
+      birthDate: new Date("1990-01-01"),
+      gender: "female",
+      address: "221B Baker Street",
+      occupation: "Engineer",
+      emergencyContactName: "Jane Doe",
+      emergencyContactNumber: "+15557654321",
+      primaryPhysician: "Naresh Trehan",
+      insuranceProvider: "BlueCross",
+      insurancePolicyNumber: "ABC123",
+      privacyConsent: true,
+    } as RegisterUserParams;
+
+    await expect(registerPatientAndContinue(params)).rejects.toThrow(
+      `NEXT_REDIRECT:/patients/${user.$id}/new-appointment`
+    );
+    expect(await getPatient(user.$id)).toMatchObject({ userId: user.$id });
+
+    // Failure (second patient for the same user) -> no redirect, returns undefined to the form
+    expect(await registerPatientAndContinue(params)).toBeUndefined();
   });
 });
