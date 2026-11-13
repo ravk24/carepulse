@@ -41,3 +41,11 @@ secondFolder
 # local planning notes
 project_update.md
 testing_details.md
+test_learnings.md
+
+# test artifacts
+/.next-e2e/
+/playwright-report/
+/test-results/
+/tests/e2e/.auth/
+/blob-report/

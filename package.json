@@ -9,7 +9,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run --project unit --project component",
+    "test:watch": "vitest --project unit --project component",
+    "test:integration": "vitest run --project integration",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "db:test:start": "supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,supavisor,postgres-meta",
+    "db:test:stop": "supabase stop",
+    "db:test:reset": "supabase db reset"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.2",
@@ -49,16 +58,28 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.10",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-datepicker": "^6.2.0",
     "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^8",
     "eslint-config-next": "^15.5.29",
     "eslint-plugin-import": "^2.29.1",
+    "jsdom": "^31.0.0",
+    "msw": "^3.0.5",
     "postcss": "^8.5.32",
+    "supabase": "^3.1.0",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^5.1.0"
   },
   "overrides": {
     "postcss": "^8.5.32",
