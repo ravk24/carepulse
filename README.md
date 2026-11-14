@@ -124,16 +124,20 @@ Open http://localhost:3000. To reach the dashboard, click **Admin** in the foote
 
 ## Testing
 
-153 automated tests across four layers. All tests run against a **local** Supabase in Docker, never the production project, and never send real SMS (Twilio is mocked with MSW).
+181 automated tests across four layers. All tests run against a **local** Supabase in Docker, never the production project, and never send real SMS (Twilio is mocked with MSW).
 
 | Layer | Tests | What it covers |
 | --- | --- | --- |
 | Unit | 59 | Zod schemas, utilities, constants, Supabase helpers |
 | Component | 44 | Patient, Register and Appointment forms, admin login modal, admin table (server actions mocked) |
-| Integration | 25 | Real server actions against local Postgres: booking, admin checks, cascade deletes, private uploads, Twilio errors, server-side redirects |
-| End-to-end | 25 runs | The full patient journey and admin dashboard in a real browser, plus mobile layout, accessibility (axe), dark-theme contrast and keyboard-only booking |
+| Integration | 42 | Real server actions against local Postgres: booking, admin checks, cascade deletes, private uploads, Twilio errors, server-side redirects, forged/expired/revoked session tokens (SEC), Supabase API error codes 400/401/403/404/409 (API) |
+| End-to-end | 36 runs | The full patient journey and admin dashboard in a real browser, plus mobile layout, accessibility (axe), dark-theme contrast, keyboard-only booking, HTTP status codes, a forged admin cookie, screenshot baselines and a flaky-test demo |
 
-Coverage: about 94% of lines and 84% of branches. The build fails below the thresholds.
+Coverage: about 95% of lines and 85% of branches. The build fails below the thresholds.
+
+- **Visual baselines** (`tests/e2e/visual.spec.ts`, tag `@visual`): screenshots compared with the PNGs in `tests/e2e/visual.spec.ts-snapshots/`. The baselines are Windows-only (fonts render differently on Linux), so CI skips them. After an intended design change: `npx playwright test visual --update-snapshots`.
+- **Flaky-test demo** (`tests/e2e/flaky-demo.spec.ts`): FLK-01 is deliberately flaky and only runs with `FLAKY_DEMO=1`; FLK-02 is its fixed version.
+- Scenario IDs (BK, VAL, UI, SEC, API, VIS, FLK) appear in every test title. `test_practical_exercises.md` has the write-up of the security, API, flaky and visual exercises.
 
 ```bash
 npm test                 # quick check, no Docker
@@ -208,4 +212,5 @@ supabase/config.toml, seed.sql  # Local test database config and seed (admin tes
 
 - **Patients don't log in.** Patient pages and actions are identified only by IDs in the URL (random UUIDs). Adding patient authentication (e.g. email or SMS one-time codes) and restricting each patient to their own records is the recommended next step before handling real patient data.
 - The doctors list is a static constant in `constants/index.ts`.
+- `/patients/<unknown id>/register` shows the not-found page but with HTTP status **200**: the root `app/loading.tsx` makes Next stream the response before `notFound()` runs (the page gets `noindex`). A real 404 would need the id checked in middleware.
 - The admin dashboard loads at most **1,000 appointments** (Supabase's default row limit), while the counts include all of them. Fine for now; it needs paging before the table grows past that.
