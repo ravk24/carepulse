@@ -14,6 +14,8 @@ export default defineConfig({
   globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI, // a stray test.only must not silently skip the suite in CI
+  // Visual baselines are committed for Windows only (fonts render differently on Linux), see visual.spec.ts
+  grepInvert: process.env.CI ? /@visual/ : undefined,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
