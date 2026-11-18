@@ -124,20 +124,22 @@ Open http://localhost:3000. To reach the dashboard, click **Admin** in the foote
 
 ## Testing
 
-181 automated tests across four layers. All tests run against a **local** Supabase in Docker, never the production project, and never send real SMS (Twilio is mocked with MSW).
+203 automated tests across four layers. All tests run against a **local** Supabase in Docker, never the production project, and never send real SMS (Twilio is mocked with MSW).
 
 | Layer | Tests | What it covers |
 | --- | --- | --- |
 | Unit | 59 | Zod schemas, utilities, constants, Supabase helpers |
 | Component | 44 | Patient, Register and Appointment forms, admin login modal, admin table (server actions mocked) |
-| Integration | 42 | Real server actions against local Postgres: booking, admin checks, cascade deletes, private uploads, Twilio errors, server-side redirects, forged/expired/revoked session tokens (SEC), Supabase API error codes 400/401/403/404/409 (API) |
-| End-to-end | 36 runs | The full patient journey and admin dashboard in a real browser, plus mobile layout, accessibility (axe), dark-theme contrast, keyboard-only booking, HTTP status codes, a forged admin cookie, screenshot baselines and a flaky-test demo |
+| Integration | 61 | Real server actions against local Postgres: booking, admin checks, cascade deletes, private uploads, Twilio errors, server-side redirects, forged/expired/revoked session tokens (SEC), Supabase API error codes 400/401/403/404/409 (API), API response bodies validated against Zod schemas (API contract), raw SQL checks of the stored data, constraints, cascades and RLS (DB) |
+| End-to-end | 39 runs | The full patient journey and admin dashboard in a real browser, plus mobile layout, accessibility (axe), dark-theme contrast, keyboard-only booking, HTTP status codes, REST API calls with Playwright `request` and schema validation, a forged admin cookie, screenshot baselines and a flaky-test demo |
 
 Coverage: about 95% of lines and 85% of branches. The build fails below the thresholds.
 
 - **Visual baselines** (`tests/e2e/visual.spec.ts`, tag `@visual`): screenshots compared with the PNGs in `tests/e2e/visual.spec.ts-snapshots/`. The baselines are Windows-only (fonts render differently on Linux), so CI skips them. After an intended design change: `npx playwright test visual --update-snapshots`.
 - **Flaky-test demo** (`tests/e2e/flaky-demo.spec.ts`): FLK-01 is deliberately flaky and only runs with `FLAKY_DEMO=1`; FLK-02 is its fixed version.
-- Scenario IDs (BK, VAL, UI, SEC, API, VIS, FLK) appear in every test title. `test_practical_exercises.md` has the write-up of the security, API, flaky and visual exercises.
+- **API schema validation** (`tests/support/api-schemas.ts`): strict Zod schemas for the `users`, `patients` and `appointments` rows, the PostgREST error body and the sign-in token. A renamed, missing, extra or retyped column fails the build. Used by `tests/integration/api-contract.int.test.ts` and `tests/e2e/api-schema.spec.ts`.
+- **SQL data checks** (`tests/integration/sql-checks.int.test.ts`): raw SQL through `pg` against the local Postgres (`TEST_DATABASE_URL` in `.env.test`). They check what the server actions actually stored, that the dashboard totals equal a `GROUP BY`, data integrity across all rows, and the schema guarantees (NOT NULL, unique, cascade, check constraints, RLS, private bucket).
+- Scenario IDs (BK, VAL, UI, SEC, API, DB, VIS, FLK) appear in every test title. `test_practical_exercises.md` has the write-up of the security, API, flaky and visual exercises.
 
 ```bash
 npm test                 # quick check, no Docker
@@ -151,7 +153,7 @@ First-time E2E setup: `npx playwright install chromium`.
 
 **CI:** `.github/workflows/test.yml` runs on every push and pull request to `main` in two jobs:
 1. lint, type-check, unit and component tests (about 1 minute);
-2. local Supabase, integration tests with coverage, then E2E (about 3 minutes).
+2. local Supabase, integration tests (including the API contract and SQL checks) with coverage, then E2E (about 3 minutes).
 
 Failed E2E runs upload a Playwright report with traces.
 

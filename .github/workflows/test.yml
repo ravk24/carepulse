@@ -41,7 +41,7 @@ jobs:
       - name: Start local Supabase (Docker)
         run: npm run db:test:start
 
-      - name: Integration tests + coverage (unit + component + integration, with thresholds)
+      - name: Integration tests + coverage (unit + component + integration incl. API contract and SQL checks, with thresholds)
         run: npm run test:coverage
 
       # ---- Playwright browsers: ~150 MB download, cached per Playwright version ----
