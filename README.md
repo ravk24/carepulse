@@ -114,6 +114,7 @@ Open http://localhost:3000. To reach the dashboard, click **Admin** in the foote
 | `npm run build` | Create a production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint (ESLint 9 flat config, `eslint.config.mjs`) |
+| `npm run verify` | Lint + type check + unit/component tests (what the pre-push hook runs) |
 | `npm test` | Unit + component tests (fast, no Docker) |
 | `npm run test:watch` | Unit + component tests in watch mode |
 | `npm run db:test:start` / `db:test:stop` / `db:test:reset` | Start, stop or reset the local Supabase test database (needs Docker) |
@@ -195,7 +196,14 @@ supabase/config.toml, seed.sql  # Local test database config and seed (admin tes
 1. Import the repository into Vercel.
 2. Add the environment variables from the table above under **Settings → Environment Variables** (for Production, and Preview if you use it).
 3. Set **Settings → Build and Deployment → Node.js Version** to **24.x**. `package.json` also pins `24.x`.
-4. Deploy. Every push to `main` deploys automatically.
+4. Production deploys run from GitHub Actions, not from Vercel's Git integration (`vercel.json` turns that off for `main`; other branches still get preview deployments). Every push to `main` runs `.github/workflows/test.yml`, and the `deploy` job runs `vercel build` + `vercel deploy --prebuilt --prod` **only after** `static-and-unit` and `integration-and-e2e` both pass. One-time setup:
+   - Run `vercel link` locally and copy `orgId` / `projectId` from `.vercel/project.json`.
+   - Create a token at vercel.com/account/tokens.
+   - In GitHub → **Settings → Secrets and variables → Actions**, add `VERCEL_TOKEN`, `VERCEL_ORG_ID` and `VERCEL_PROJECT_ID`.
+
+### Pre-push hook
+
+`npm install` installs a git `pre-push` hook (via `simple-git-hooks`) that runs `npm run verify`: lint, `tsc --noEmit`, and unit + component tests. A failing check stops the push. In an emergency, `git push --no-verify` skips the hook, but CI still blocks the deploy.
 
 > Environment variables only apply to deployments started **after** they're added, so redeploy after changing them.
 
